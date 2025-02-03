@@ -1,60 +1,74 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import AboutMeAdmin from "./AboutMeAdmin";
+import ProjectsAdmin from "./ProjectsAdmin";
+import ExperienceAdmin from "./ExperienceAdmin";
+import TestimonialsAdmin from "./TestimonialsAdmin";
 
 const AdminDashboard = () => {
-  const [user, setUser] = useState(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user || user.email !== "samprasad7220@gmail.com") {
-        navigate("/admin-login");
-      } else {
-        setUser(user);
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/admin-login");
-  };
+  const [selectedSection, setSelectedSection] = useState("About Me");
 
   return (
     <div style={styles.container}>
-      <h1>Admin Dashboard</h1>
-      {user && <p>Welcome, {user.email}!</p>}
-      <button onClick={handleLogout} style={styles.button}>Logout</button>
+      <div style={styles.sidebar}>
+        {["About Me", "Projects", "Experience", "Testimonials"].map((section) => (
+          <button
+            key={section}
+            onClick={() => setSelectedSection(section)}
+            style={selectedSection === section ? styles.activeButton : styles.button}
+          >
+            {section}
+          </button>
+        ))}
+      </div>
+
+      <div style={styles.content}>
+        {selectedSection === "About Me" && <AboutMeAdmin />}
+        {selectedSection === "Projects" && <ProjectsAdmin />}
+        {selectedSection === "Experience" && <ExperienceAdmin />}
+        {selectedSection === "Testimonials" && <TestimonialsAdmin />}
+      </div>
     </div>
   );
 };
 
 const styles = {
   container: {
-    textAlign: "center" as const,
-    padding: "2rem",
-    color: "#fff",
+    display: "flex",
+    height: "100vh",
     backgroundColor: "#000",
-    maxWidth: "600px",
-    margin: "5rem auto",
-    borderRadius: "8px",
-    boxShadow: "0 0 10px rgba(255, 255, 255, 0.2)",
+    color: "#fff",
+  },
+  sidebar: {
+    width: "250px",
+    backgroundColor: "#222",
+    padding: "1rem",
+    display: "flex",
+    flexDirection: "column" as "column",
+    gap: "1rem",
   },
   button: {
-    backgroundColor: "#ff4444",
-    color: "#fff",
-    padding: "0.8rem",
-    border: "none",
-    borderRadius: "5px",
+    padding: "10px",
     fontSize: "1rem",
+    backgroundColor: "#333",
+    color: "#fff",
+    border: "none",
     cursor: "pointer",
-    marginTop: "1rem",
+    borderRadius: "5px",
+  },
+  activeButton: {
+    padding: "10px",
+    fontSize: "1rem",
+    backgroundColor: "#007bff",
+    color: "#fff",
+    border: "none",
+    cursor: "pointer",
+    borderRadius: "5px",
+  },
+  content: {
+    flex: 1,
+    padding: "2rem",
   },
 };
 
 export default AdminDashboard;
+
