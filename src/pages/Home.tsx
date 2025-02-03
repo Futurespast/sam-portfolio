@@ -77,7 +77,7 @@ const Home = () => {
       });
       setProjects(projectsWithImages);
       console.log("Projects with Images:", projectsWithImages);
-      const { data: cvPublicUrl } = await supabase.storage.from("storage1").getPublicUrl("cv.pdf");
+      const { data: cvPublicUrl } = await supabase.storage.from("storage1").getPublicUrl("SamPrasadResume.pdf");
       setCvUrl(cvPublicUrl?.publicUrl || "");
     };
     fetchData();

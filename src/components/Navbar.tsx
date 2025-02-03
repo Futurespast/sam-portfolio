@@ -1,9 +1,28 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
-
+import { supabase } from "../lib/supabase";
+import { useState, useEffect } from "react";
 const Navbar = () => {
   const { language, toggleLanguage } = useLanguage();
-  
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+    };
+    checkAuth();
+  }, []);
+
+  const handleAdminClick = () => {
+    if (isLoggedIn) {
+      navigate("/admin-dashboard");
+    } else {
+      navigate("/admin-login");
+    }
+  };
+
   return (
     <nav style={styles.navbar}>
     <b style={styles.brand}>Next Gen Dev</b>
@@ -18,7 +37,7 @@ const Navbar = () => {
       <Link to="/contact" style={styles.link}>{language === "EN"? "Contact Me" : "Contactez-moi"}</Link>
       </li>
       <li>
-      <Link to="/admin" style={styles.link}>Admin</Link>
+      <button style={styles.adminButton} onClick={handleAdminClick}>Admin</button>
       </li>
       <li>
       <button onClick={toggleLanguage} style={styles.languageButton}>
@@ -66,6 +85,14 @@ const Navbar = () => {
     borderRadius: "5px",
     padding: "0.5rem",
     color: "#fff",
+    cursor: "pointer",
+  },
+  adminButton: {
+    background: "none",
+    border: "none",
+    color: "#fff",
+    textDecoration: "none",
+    fontWeight: "bold",
     cursor: "pointer",
   },
   };

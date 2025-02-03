@@ -4,9 +4,9 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
-//import Testimonials from "./pages/Testimonials";
-//import Contact from "./pages/Contact";
-//import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminLogin from "./pages/AdminLogin";
+import UpdatePassword from "./pages/UpdatePassword";
 import './App.css'
 
 function App() {
@@ -20,8 +20,10 @@ function App() {
      <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/testimonials" element={<Testimonials />}/>
-      <Route path="/contact" element={<Contact />} />{/*
-      <Route path="/admin" element={<Admin />} />*/}
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/admin-login" element={<AdminLogin />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/update-password" element={<UpdatePassword />} />
     </Routes> 
     </div>
     <Footer/>
