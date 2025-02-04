@@ -20,20 +20,33 @@ const TestimonialsAdmin = () => {
     setPendingTestimonials(pendingTestimonials.filter((t) => t.id !== id));
   };
 
+  const deleteTestimonial = async (id: number, isApproved: boolean) => {
+    await supabase.from("testimonials").delete().eq("id", id);
+    if (isApproved) {
+      setApprovedTestimonials((prev) => prev.filter((test) => test.id !== id));
+    } else {
+      setPendingTestimonials((prev) => prev.filter((test) => test.id !== id));
+    }
+  };
+
   return (
     <div>
       <h2>Pending Testimonials</h2>
       {pendingTestimonials.map((test) => (
-        <div key={test.id}>
-          <p>{test.content}</p>
+        <div style={styles.div} key={test.id}>
+          <p>Name: {test.name}</p>
+          <p>Content: {test.content}</p>
           <button onClick={() => approveTestimonial(test.id)}>Approve</button>
+          <button onClick={() => deleteTestimonial(test.id, false)}>Delete</button>
         </div>
       ))}
 
       <h2>Approved Testimonials</h2>
       {approvedTestimonials.map((test) => (
-        <div key={test.id}>
-          <p>{test.content}</p>
+        <div style={styles.div} key={test.id}>
+          <p>Name: {test.name}</p>
+          <p>Content: {test.content}</p>
+          <button onClick={() => deleteTestimonial(test.id, true)}>Delete</button>
         </div>
       ))}
     </div>
@@ -41,3 +54,8 @@ const TestimonialsAdmin = () => {
 };
 
 export default TestimonialsAdmin;
+const styles = {
+  div: {
+    backgroundColor: "gray",
+  }
+}
