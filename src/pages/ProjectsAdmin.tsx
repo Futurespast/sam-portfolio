@@ -1,9 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent, FC } from "react";
 import { supabase } from "../lib/supabase";
 
-const ProjectsAdmin = () => {
-  const [projects, setProjects] = useState<any[]>([]);
-  const [newProject, setNewProject] = useState<any>({
+interface Project {
+  id: number;
+  title: string;
+  description_eng: string;
+  description_fr: string;
+  link: string;
+  image_name: string | null;
+  image_url?: string | null;
+}
+
+interface ProjectInput {
+  title: string;
+  description_eng: string;
+  description_fr: string;
+  link: string;
+  image_name: string;
+}
+
+const ProjectsAdmin: FC = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [newProject, setNewProject] = useState<ProjectInput>({
     title: "",
     description_eng: "",
     description_fr: "",
@@ -11,32 +29,56 @@ const ProjectsAdmin = () => {
     image_name: "",
   });
   const [newProjectFile, setNewProjectFile] = useState<File | null>(null);
-  const [editingProject, setEditingProject] = useState<any>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editProjectFile, setEditProjectFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchProjects = async () => {
-      const { data } = await supabase.from("projects").select("*");
-      setProjects(data || []);
+      const { data: projectsData, error } = await supabase
+        .from("projects")
+        .select("*");
+
+      if (error) {
+        console.error("Error fetching projects:", error);
+        return;
+      }
+
+   
+      const projectsWithImages = await Promise.all(
+        (projectsData || []).map(async (project) => {
+          if (project.image_name) {
+            const { data: publicUrlData } = supabase.storage
+              .from("storage1")
+              .getPublicUrl(project.image_name);
+            return { ...project, image_url: publicUrlData?.publicUrl || null };
+          }
+          return { ...project, image_url: null };
+        })
+      );
+
+      setProjects(projectsWithImages);
     };
+
     fetchProjects();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setNewProjectFile(e.target.files[0]);
     }
   };
 
-  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setEditProjectFile(e.target.files[0]);
     }
   };
 
-  // Add new project
+  
   const addProject = async () => {
     let imageName = "";
+    let imageUrl: string | null = null;
+
     if (newProjectFile) {
       const fileName = `${Date.now()}-${newProjectFile.name}`;
       const { error: uploadError } = await supabase.storage
@@ -44,14 +86,26 @@ const ProjectsAdmin = () => {
         .upload(fileName, newProjectFile);
       if (!uploadError) {
         imageName = fileName;
+        const { data: publicUrlData } = supabase.storage
+          .from("storage1")
+          .getPublicUrl(fileName);
+        imageUrl = publicUrlData?.publicUrl || null;
       }
     }
-    const { data, error } = await supabase
+
+    const { data: insertedData, error } = await supabase
       .from("projects")
-      .insert([{ ...newProject, image_name: imageName }]);
-    if (!error && data) {
-      setProjects((prev) => [...prev, data[0]]);
+      .insert([{ ...newProject, image_name: imageName }])
+      .select();
+
+    if (!error && insertedData && insertedData.length > 0) {
+      setProjects((prev) => [
+        ...prev,
+        { ...insertedData[0], image_url: imageUrl },
+      ]);
     }
+
+   
     setNewProject({
       title: "",
       description_eng: "",
@@ -62,11 +116,14 @@ const ProjectsAdmin = () => {
     setNewProjectFile(null);
   };
 
-  // Edit existing project
-  const editProject = async (id: number) => {
-    let updatedFields = { ...editingProject };
 
-    // If user uploaded a new file, upload & replace image_name
+  const editProject = async (id: number) => {
+    if (!editingProject) return;
+
+    // eslint-disable-next-line prefer-const
+    let updatedFields = { ...editingProject };
+    let newImageUrl: string | null = null;
+
     if (editProjectFile) {
       const fileName = `${Date.now()}-${editProjectFile.name}`;
       const { error: newUploadError } = await supabase.storage
@@ -74,22 +131,44 @@ const ProjectsAdmin = () => {
         .upload(fileName, editProjectFile);
       if (!newUploadError) {
         updatedFields.image_name = fileName;
+        const { data: publicUrlData } = await supabase.storage
+          .from("storage1")
+          .getPublicUrl(fileName);
+        newImageUrl = publicUrlData?.publicUrl || null;
       }
     }
 
-    await supabase.from("projects").update(updatedFields).eq("id", id);
-    setProjects((prev) => prev.map((p) => (p.id === id ? updatedFields : p)));
+    const { error } = await supabase
+      .from("projects")
+      .update(updatedFields)
+      .eq("id", id);
+    if (error) {
+      console.error("Error updating project:", error);
+      return;
+    }
+
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...updatedFields, image_url: newImageUrl || p.image_url } : p
+      )
+    );
     setEditingProject(null);
     setEditProjectFile(null);
   };
 
-  // Delete project
-  const deleteProject = async (id: number, imageName: string) => {
+ 
+  const deleteProject = async (id: number, imageName: string | null) => {
     if (imageName) {
       await supabase.storage.from("storage1").remove([imageName]);
-      await supabase.from("projects").update({ image_name: null }).eq("id", id);
+      await supabase
+        .from("projects")
+        .update({ image_name: null })
+        .eq("id", id);
     }
-    await supabase.from("projects").delete().eq("id", id);
+    await supabase
+      .from("projects")
+      .delete()
+      .eq("id", id);
     setProjects((prev) => prev.filter((p) => p.id !== id));
   };
 
@@ -101,7 +180,9 @@ const ProjectsAdmin = () => {
           type="text"
           placeholder="Title"
           value={newProject.title}
-          onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
+          onChange={(e) =>
+            setNewProject({ ...newProject, title: e.target.value })
+          }
         />
         <input
           type="text"
@@ -123,7 +204,9 @@ const ProjectsAdmin = () => {
           type="text"
           placeholder="Link"
           value={newProject.link}
-          onChange={(e) => setNewProject({ ...newProject, link: e.target.value })}
+          onChange={(e) =>
+            setNewProject({ ...newProject, link: e.target.value })
+          }
         />
         <input type="file" accept="image/*" onChange={handleFileChange} />
         <button style={styles.button} onClick={addProject}>
@@ -134,23 +217,23 @@ const ProjectsAdmin = () => {
       <div style={styles.cardContainer}>
         {projects.map((project) => (
           <div key={project.id} style={styles.card}>
-            {project.image_name && (
+            {project.image_url && (
               <img
-                src={`https://<PROJECT_REF>.supabase.co/storage/v1/object/public/storage1/${project.image_name}`}
+                src={project.image_url}
                 alt={project.title}
                 style={styles.cardImage}
               />
             )}
             {editingProject?.id === project.id ? (
-              <form
-                style={styles.form}
-                onSubmit={(e) => e.preventDefault()}
-              >
+              <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
                 <input
                   type="text"
                   value={editingProject.title}
                   onChange={(e) =>
-                    setEditingProject({ ...editingProject, title: e.target.value })
+                    setEditingProject({
+                      ...editingProject,
+                      title: e.target.value,
+                    })
                   }
                 />
                 <input
@@ -177,11 +260,21 @@ const ProjectsAdmin = () => {
                   type="text"
                   value={editingProject.link}
                   onChange={(e) =>
-                    setEditingProject({ ...editingProject, link: e.target.value })
+                    setEditingProject({
+                      ...editingProject,
+                      link: e.target.value,
+                    })
                   }
                 />
-                <input type="file" accept="image/*" onChange={handleEditFileChange} />
-                <button style={styles.button} onClick={() => editProject(project.id)}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditFileChange}
+                />
+                <button
+                  style={styles.button}
+                  onClick={() => editProject(project.id)}
+                >
                   Save
                 </button>
               </form>
@@ -190,12 +283,17 @@ const ProjectsAdmin = () => {
                 <h3>{project.title}</h3>
                 <p>{project.description_eng}</p>
                 <p>{project.description_fr}</p>
-                <p>
-                  <a href={project.link} target="_blank" rel="noreferrer">
-                    {project.link}
-                  </a>
-                </p>
-                <button style={styles.button} onClick={() => setEditingProject(project)}>
+                {project.link && (
+                  <p>
+                    <a href={project.link} target="_blank" rel="noreferrer">
+                      {project.link}
+                    </a>
+                  </p>
+                )}
+                <button
+                  style={styles.button}
+                  onClick={() => setEditingProject(project)}
+                >
                   Edit
                 </button>
                 <button
@@ -262,3 +360,4 @@ const styles = {
     textAlign: "left" as const,
   },
 };
+

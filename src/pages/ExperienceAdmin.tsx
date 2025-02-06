@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
+interface Experience {
+  id?: number;
+  role: string;
+  employer: string;
+  start_date: string;
+  end_date: string;
+}
+
 const ExperienceAdmin = () => {
-  const [experience, setExperience] = useState<any[]>([]);
-  const [newExperience, setNewExperience] = useState<any>({
+  const [experience, setExperience] = useState<Experience[]>([]);
+  const [newExperience, setNewExperience] = useState<Experience>({
     role: "",
     employer: "",
     start_date: "",
     end_date: "",
   });
-  const [editingExperience, setEditingExperience] = useState<any>(null);
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
 
   useEffect(() => {
     const fetchExperience = async () => {
@@ -19,7 +27,7 @@ const ExperienceAdmin = () => {
     fetchExperience();
   }, []);
 
-  // Add experience
+ 
   const addExperience = async () => {
     const { data, error } = await supabase.from("experience").insert([newExperience]);
     if (!error && data) {
@@ -33,14 +41,16 @@ const ExperienceAdmin = () => {
     });
   };
 
-  // Edit experience
+
   const editExperienceSave = async (id: number) => {
-    await supabase.from("experience").update(editingExperience).eq("id", id);
-    setExperience((prev) => prev.map((e) => (e.id === id ? editingExperience : e)));
+    if (editingExperience) {
+      await supabase.from("experience").update(editingExperience).eq("id", id);
+      setExperience((prev) => prev.map((e) => (e.id === id ? editingExperience : e)));
+    }
     setEditingExperience(null);
   };
 
-  // Delete experience
+
   const deleteExperience = async (id: number) => {
     await supabase.from("experience").delete().eq("id", id);
     setExperience((prev) => prev.filter((e) => e.id !== id));
@@ -49,7 +59,7 @@ const ExperienceAdmin = () => {
   return (
     <div style={styles.container}>
       <h2>Manage Experience</h2>
-      <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
+      <form style={styles.form} onSubmit={(e) => { e.preventDefault(); addExperience(); }}>
         <input
           type="text"
           placeholder="Role"
@@ -79,38 +89,38 @@ const ExperienceAdmin = () => {
 
       <div style={styles.cardContainer}>
         {experience.map((exp) => (
-          <div key={exp.id} style={styles.card}>
+          <div key={exp.id ?? Math.random()} style={styles.card}>
             {editingExperience?.id === exp.id ? (
               <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
                 <input
                   type="text"
-                  value={editingExperience.role}
+                  value={editingExperience?.role || ""}
                   onChange={(e) =>
-                    setEditingExperience({ ...editingExperience, role: e.target.value })
+                    setEditingExperience(editingExperience ? { ...editingExperience, role: e.target.value } : null)
                   }
                 />
                 <input
                   type="text"
-                  value={editingExperience.employer}
+                  value={editingExperience?.employer || ""}
                   onChange={(e) =>
-                    setEditingExperience({ ...editingExperience, employer: e.target.value })
+                    setEditingExperience(editingExperience ? { ...editingExperience, employer: e.target.value } : null)
                   }
                 />
                 <input
                   type="text"
-                  value={editingExperience.start_date}
+                  value={editingExperience?.start_date || ""}
                   onChange={(e) =>
-                    setEditingExperience({ ...editingExperience, start_date: e.target.value })
+                    setEditingExperience(editingExperience ? { ...editingExperience, start_date: e.target.value } : null)
                   }
                 />
                 <input
                   type="text"
-                  value={editingExperience.end_date}
+                  value={editingExperience?.end_date || ""}
                   onChange={(e) =>
-                    setEditingExperience({ ...editingExperience, end_date: e.target.value })
+                    setEditingExperience(editingExperience ? { ...editingExperience, end_date: e.target.value } : null)
                   }
                 />
-                <button style={styles.button} onClick={() => editExperienceSave(exp.id)}>
+                <button style={styles.button} onClick={() => exp.id && editExperienceSave(exp.id)}>
                   Save
                 </button>
               </form>
@@ -125,7 +135,7 @@ const ExperienceAdmin = () => {
                 <button style={styles.button} onClick={() => setEditingExperience(exp)}>
                   Edit
                 </button>
-                <button style={styles.button} onClick={() => deleteExperience(exp.id)}>
+                <button style={styles.button} onClick={() => exp.id && deleteExperience(exp.id)}>
                   Delete
                 </button>
               </div>

@@ -5,15 +5,30 @@ import { useLanguage } from "../context/LanguageContext";
 const Home = () => {
   const { language } = useLanguage();
 
-  // State for data
+
   const [bio, setBio] = useState({ bioENG: "", bioFR: "" });
   const [profileImage, setProfileImage] = useState("");
-  const [experience, setExperience] = useState([]);
-  const [projects, setProjects] = useState([]);
+  const [experience, setExperience] = useState<{
+    id: number;
+    title: string;
+    employer: string;
+    start_date: string;
+    end_date?: string;
+  }[]>([]);
+  type Project = {
+    id: number;
+    title: string;
+    description_eng: string;
+    description_fr: string;
+    link?: string;
+    image_name: string;
+    image_url?: string;
+  }
+  const [projects, setProjects] = useState<Project[]>([]);
   const [cvUrl, setCvUrl] = useState("");
 
 
-  // For terminal typing animation
+
   const [animatedLines, setAnimatedLines] = useState<string[]>([]);
   const terminalText = useMemo(
     () =>
@@ -54,7 +69,7 @@ const Home = () => {
     return () => clearInterval(timer);
   }, [terminalText]);
 
-  // Fetch data from Supabase
+
   useEffect(() => {
     const fetchData = async () => {
       const { data: bioData } = await supabase.from("text").select("name, content").in("name", ["bioENG", "bioFR"]);
@@ -65,7 +80,7 @@ const Home = () => {
       const { data: image } = await supabase.storage.from("storage1").getPublicUrl("sam.jpg");
       setProfileImage(image?.publicUrl || "");
       const { data: experienceData } = await supabase.from("experience").select("*").order("start_date", { ascending: true });
-      setExperience(experienceData || []);
+      setExperience(experienceData ?? []);
       const { data: projectsData } = await supabase.from("projects").select("*");
       const projectsWithImages = (projectsData || []).map((project) => {
         const { data: publicUrlData } = supabase.storage.from("storage1").getPublicUrl(project.image_name);
@@ -159,7 +174,9 @@ const Home = () => {
   );
 };
 
-const styles = {
+import { CSSProperties } from "react";
+
+const styles: { [key: string]: CSSProperties } = {
   container: {
     color: "#fff",
     backgroundColor: "#000",

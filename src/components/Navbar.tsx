@@ -13,6 +13,14 @@ const Navbar = () => {
       setIsLoggedIn(!!user);
     };
     checkAuth();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session?.user);
+    });
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
   }, []);
 
   const handleAdminClick = () => {
@@ -23,30 +31,56 @@ const Navbar = () => {
     }
   };
 
-  return (
-    <nav style={styles.navbar}>
-    <b style={styles.brand}>Next Gen Dev</b>
-    <ul style={styles.navList}>
-      <li>
-      <Link to="/" style={styles.link}>{language === "EN"? "Main Page" : "Page d'Accueil"}</Link>
-      </li>
-      <li>
-      <Link to="/testimonials" style={styles.link}>{language === "EN"? "Testimonials" : "Témoignages"}</Link>
-      </li>
-      <li>
-      <Link to="/contact" style={styles.link}>{language === "EN"? "Contact Me" : "Contactez-moi"}</Link>
-      </li>
-      <li>
-      <button style={styles.adminButton} onClick={handleAdminClick}>Admin</button>
-      </li>
-      <li>
-      <button onClick={toggleLanguage} style={styles.languageButton}>
-        {language === "EN" ? "FR" : "EN"}
-      </button>
-      </li>
-    </ul>
-    </nav>
-  );
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsLoggedIn(false);
+    navigate("/");
+  };
+    return (
+      <nav style={styles.navbar}>
+        <b style={styles.brand}>Next Gen Dev</b>
+        <ul style={styles.navList}>
+          <li>
+            <Link to="/" style={styles.link}>
+              {language === "EN"? "Main Page" : "Page d'Accueil"}
+            </Link>
+          </li>
+          <li>
+            <Link to="/testimonials" style={styles.link}>
+              {language === "EN"? "Testimonials" : "Témoignages"}
+            </Link>
+          </li>
+          <li>
+            <Link to="/contact" style={styles.link}>
+              {language === "EN"? "Contact Me" : "Contactez-moi"}
+            </Link>
+          </li>
+          {isLoggedIn ? (
+            <>
+              <li>
+                <Link to="/admin-dashboard" style={styles.link}>Admin Dashboard</Link>
+              </li>
+              <li>
+                <button style={styles.adminButton} onClick={handleLogout}>
+                  Logout
+                </button>
+              </li>
+            </>
+          ) : (
+            <li>
+              <button style={styles.adminButton} onClick={handleAdminClick}>
+                Login
+              </button>
+            </li>
+          )}
+          <li>
+            <button onClick={toggleLanguage} style={styles.languageButton}>
+              {language === "EN" ? "FR" : "EN"}
+            </button>
+          </li>
+        </ul>
+      </nav>
+    );
   };
   
   import { CSSProperties } from "react";

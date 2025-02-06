@@ -2,15 +2,21 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useLanguage } from "../context/LanguageContext";
 
+interface Testimonial {
+  id: number;
+  name: string;
+  content: string;
+}
+
 const Testimonials = () => {
   const { language } = useLanguage();
-  const [testimonials, setTestimonials] = useState([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch testimonials
+ 
   useEffect(() => {
     const fetchTestimonials = async () => {
       const { data: testimonialsData, error } = await supabase
@@ -27,7 +33,7 @@ const Testimonials = () => {
     fetchTestimonials();
   }, []);
 
-  // Handle form submission
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -50,7 +56,7 @@ const Testimonials = () => {
     <div style={styles.container}>
       <h1>{language === "EN" ? "Testimonials" : "Témoignages"}</h1>
 
-      {/* Testimonials List */}
+
       <div style={styles.testimonialsList}>
         {testimonials.length > 0 ? (
           testimonials.map((testimonial) => (
@@ -64,7 +70,7 @@ const Testimonials = () => {
         )}
       </div>
 
-      {/* Form or Confirmation Message */}
+
       {!formSubmitted ? (
         <form onSubmit={handleSubmit} style={styles.form}>
           <h2>{language === "EN" ? "Add a Testimonial" : "Ajoutez un témoignage"}</h2>

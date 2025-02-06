@@ -16,7 +16,7 @@ const AdminLogin = () => {
     const allowedEmail = "samprasad7220@gmail.com";
 
     if (email !== allowedEmail) {
-      setError("Unauthorized: Only the admin can log in.");
+      setError("Unauthorized: incorrect log in.");
       return;
     }
 
@@ -34,7 +34,7 @@ const AdminLogin = () => {
 
   return (
     <div style={styles.container}>
-      <h1>Admin Login</h1>
+      <h1>Login</h1>
       {error && <p style={styles.error}>{error}</p>}
       <form onSubmit={handleLogin} style={styles.form}>
         <input

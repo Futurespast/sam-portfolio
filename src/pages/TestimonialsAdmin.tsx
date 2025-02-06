@@ -1,22 +1,33 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-const TestimonialsAdmin = () => {
-  const [approvedTestimonials, setApprovedTestimonials] = useState([]);
-  const [pendingTestimonials, setPendingTestimonials] = useState([]);
+interface Testimonial {
+  id: number;
+  approved: boolean;
+  name: string;
+  content: string;
+}
+
+const TestimonialsAdmin: React.FC = () => {
+  const [approvedTestimonials, setApprovedTestimonials] = useState<Testimonial[]>([]);
+  const [pendingTestimonials, setPendingTestimonials] = useState<Testimonial[]>([]);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
       const { data } = await supabase.from("testimonials").select("*");
-      setApprovedTestimonials(data.filter((t) => t.approved) || []);
-      setPendingTestimonials(data.filter((t) => !t.approved) || []);
+      const testimonials: Testimonial[] = data ?? [];
+      setApprovedTestimonials(testimonials.filter((t) => t.approved));
+      setPendingTestimonials(testimonials.filter((t) => !t.approved));
     };
     fetchTestimonials();
   }, []);
 
-  const approveTestimonial = async (id) => {
+  const approveTestimonial = async (id: number) => {
     await supabase.from("testimonials").update({ approved: true }).eq("id", id);
-    setApprovedTestimonials([...approvedTestimonials, pendingTestimonials.find((t) => t.id === id)]);
+    const approvedTestimonial = pendingTestimonials.find((t) => t.id === id);
+    if (approvedTestimonial) {
+      setApprovedTestimonials([...approvedTestimonials, approvedTestimonial]);
+    }
     setPendingTestimonials(pendingTestimonials.filter((t) => t.id !== id));
   };
 
@@ -54,8 +65,9 @@ const TestimonialsAdmin = () => {
 };
 
 export default TestimonialsAdmin;
+
 const styles = {
   div: {
     backgroundColor: "gray",
-  }
-}
+  },
+};

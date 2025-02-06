@@ -43,7 +43,7 @@ const styles = {
     backgroundColor: "#222",
     padding: "1rem",
     display: "flex",
-    flexDirection: "column" as "column",
+    flexDirection: "column" as const,
     gap: "1rem",
   },
   button: {
