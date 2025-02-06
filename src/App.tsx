@@ -13,10 +13,10 @@ function App() {
   
 
   return (
-    <div style={styles.app}>
+    <div style={styles.app as React.CSSProperties}>
     <Router>
     <Navbar/>
-    <div style={styles.content}>
+    <div style={styles.content as React.CSSProperties}>
      <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/testimonials" element={<Testimonials />}/>
