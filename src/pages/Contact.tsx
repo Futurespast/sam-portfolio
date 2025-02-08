@@ -6,15 +6,15 @@ const Contact = () => {
   const contactLinks = [
     {
       name: language === "EN" ? "Email" : "Courriel",
-      url: "mailto:your-email@example.com",
+      url: "mailto:samprasad7220@gmail.com",
     },
     {
       name: "LinkedIn",
-      url: "https://www.linkedin.com/in/your-profile",
+      url: "https://www.linkedin.com/in/sam-prasad-a00b2432a/",
     },
     {
       name: "GitHub",
-      url: "https://github.com/your-github",
+      url: "https://github.com/Futurespast",
     },
   ];
 
