@@ -43,3 +43,12 @@
 .read-the-docs {
   color: #888;
 }
+
+.slick-prev, .slick-next {
+  color: white !important;
+  z-index: 1000;
+}
+
+.slick-prev:before, .slick-next:before {
+  color: white !important;
+}

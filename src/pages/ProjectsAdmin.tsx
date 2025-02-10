@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import { useState, useEffect, ChangeEvent, FC } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -32,6 +33,14 @@ const ProjectsAdmin: FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editProjectFile, setEditProjectFile] = useState<File | null>(null);
 
+  // Carousel state
+  const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
+  const projectsPerPage = 2;
+  const visibleProjects = projects.slice(
+    currentProjectIndex,
+    currentProjectIndex + projectsPerPage
+  );
+
   useEffect(() => {
     const fetchProjects = async () => {
       const { data: projectsData, error } = await supabase
@@ -43,7 +52,6 @@ const ProjectsAdmin: FC = () => {
         return;
       }
 
-   
       const projectsWithImages = await Promise.all(
         (projectsData || []).map(async (project) => {
           if (project.image_name) {
@@ -74,7 +82,6 @@ const ProjectsAdmin: FC = () => {
     }
   };
 
-  
   const addProject = async () => {
     let imageName = "";
     let imageUrl: string | null = null;
@@ -105,7 +112,6 @@ const ProjectsAdmin: FC = () => {
       ]);
     }
 
-   
     setNewProject({
       title: "",
       description_eng: "",
@@ -116,11 +122,9 @@ const ProjectsAdmin: FC = () => {
     setNewProjectFile(null);
   };
 
-
   const editProject = async (id: number) => {
     if (!editingProject) return;
 
-    // eslint-disable-next-line prefer-const
     let updatedFields = { ...editingProject };
     let newImageUrl: string | null = null;
 
@@ -156,20 +160,23 @@ const ProjectsAdmin: FC = () => {
     setEditProjectFile(null);
   };
 
- 
   const deleteProject = async (id: number, imageName: string | null) => {
     if (imageName) {
       await supabase.storage.from("storage1").remove([imageName]);
-      await supabase
-        .from("projects")
-        .update({ image_name: null })
-        .eq("id", id);
+      await supabase.from("projects").update({ image_name: null }).eq("id", id);
     }
-    await supabase
-      .from("projects")
-      .delete()
-      .eq("id", id);
+    await supabase.from("projects").delete().eq("id", id);
     setProjects((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handlePrev = () => {
+    setCurrentProjectIndex((prev) => Math.max(prev - projectsPerPage, 0));
+  };
+
+  const handleNext = () => {
+    setCurrentProjectIndex((prev) =>
+      prev + projectsPerPage < projects.length ? prev + projectsPerPage : prev
+    );
   };
 
   return (
@@ -214,98 +221,116 @@ const ProjectsAdmin: FC = () => {
         </button>
       </form>
 
-      <div style={styles.cardContainer}>
-        {projects.map((project) => (
-          <div key={project.id} style={styles.card}>
-            {project.image_url && (
-              <img
-                src={project.image_url}
-                alt={project.title}
-                style={styles.cardImage}
-              />
-            )}
-            {editingProject?.id === project.id ? (
-              <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
-                <input
-                  type="text"
-                  value={editingProject.title}
-                  onChange={(e) =>
-                    setEditingProject({
-                      ...editingProject,
-                      title: e.target.value,
-                    })
-                  }
+      <div style={styles.carouselContainer}>
+        <button 
+          style={styles.carouselButton}
+          onClick={handlePrev}
+          disabled={currentProjectIndex === 0}
+        >
+          &#8592;
+        </button>
+        <div style={styles.cardContainer}>
+          {visibleProjects.map((project) => (
+            <div key={project.id} style={styles.card}>
+              {project.image_url && (
+                <img
+                  src={project.image_url}
+                  alt={project.title}
+                  style={styles.cardImage}
                 />
-                <input
-                  type="text"
-                  value={editingProject.description_eng}
-                  onChange={(e) =>
-                    setEditingProject({
-                      ...editingProject,
-                      description_eng: e.target.value,
-                    })
-                  }
-                />
-                <input
-                  type="text"
-                  value={editingProject.description_fr}
-                  onChange={(e) =>
-                    setEditingProject({
-                      ...editingProject,
-                      description_fr: e.target.value,
-                    })
-                  }
-                />
-                <input
-                  type="text"
-                  value={editingProject.link}
-                  onChange={(e) =>
-                    setEditingProject({
-                      ...editingProject,
-                      link: e.target.value,
-                    })
-                  }
-                />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleEditFileChange}
-                />
-                <button
-                  style={styles.button}
-                  onClick={() => editProject(project.id)}
-                >
-                  Save
-                </button>
-              </form>
-            ) : (
-              <div style={styles.cardContent}>
-                <h3>{project.title}</h3>
-                <p>{project.description_eng}</p>
-                <p>{project.description_fr}</p>
-                {project.link && (
-                  <p>
-                    <a href={project.link} target="_blank" rel="noreferrer">
-                      {project.link}
-                    </a>
-                  </p>
-                )}
-                <button
-                  style={styles.button}
-                  onClick={() => setEditingProject(project)}
-                >
-                  Edit
-                </button>
-                <button
-                  style={styles.button}
-                  onClick={() => deleteProject(project.id, project.image_name)}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+              {editingProject?.id === project.id ? (
+                <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
+                  <input
+                    type="text"
+                    value={editingProject.title}
+                    onChange={(e) =>
+                      setEditingProject({
+                        ...editingProject,
+                        title: e.target.value,
+                      })
+                    }
+                  />
+                  <input
+                    type="text"
+                    value={editingProject.description_eng}
+                    onChange={(e) =>
+                      setEditingProject({
+                        ...editingProject,
+                        description_eng: e.target.value,
+                      })
+                    }
+                  />
+                  <input
+                    type="text"
+                    value={editingProject.description_fr}
+                    onChange={(e) =>
+                      setEditingProject({
+                        ...editingProject,
+                        description_fr: e.target.value,
+                      })
+                    }
+                  />
+                  <input
+                    type="text"
+                    value={editingProject.link}
+                    onChange={(e) =>
+                      setEditingProject({
+                        ...editingProject,
+                        link: e.target.value,
+                      })
+                    }
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleEditFileChange}
+                  />
+                  <button
+                    style={styles.button}
+                    onClick={() => editProject(project.id)}
+                  >
+                    Save
+                  </button>
+                </form>
+              ) : (
+                <div style={styles.cardContent}>
+                  <h3>{project.title}</h3>
+                  <p>{project.description_eng}</p>
+                  <p>{project.description_fr}</p>
+                  {project.link && (
+                    <p>
+                      <a href={project.link} target="_blank" rel="noreferrer">
+                        {project.link}
+                      </a>
+                    </p>
+                  )}
+                  <button
+                    style={styles.button}
+                    onClick={() => setEditingProject(project)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    style={styles.button}
+                    onClick={() =>
+                      deleteProject(project.id, project.image_name)
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <button 
+          style={styles.carouselButton}
+          onClick={handleNext}
+          disabled={currentProjectIndex + projectsPerPage >= projects.length}
+        >
+          &#8594;
+        </button>
       </div>
     </div>
   );
@@ -318,6 +343,7 @@ const styles = {
     padding: "1rem",
     color: "#fff",
     backgroundColor: "#000",
+    paddingBottom: "8rem",
   },
   form: {
     display: "flex",
@@ -334,6 +360,21 @@ const styles = {
     cursor: "pointer",
     borderRadius: "5px",
     fontWeight: "bold",
+  },
+  carouselContainer: {
+    display: "flex",
+    alignItems: "center",
+    marginTop: "1rem",
+  },
+  carouselButton: {
+    backgroundColor: "#007bff",
+    border: "none",
+    color: "#fff",
+    fontSize: "2rem",
+    padding: "0.5rem 1rem",
+    cursor: "pointer",
+    borderRadius: "5px",
+    margin: "0 0.5rem",
   },
   cardContainer: {
     display: "grid",
