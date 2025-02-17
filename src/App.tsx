@@ -7,16 +7,16 @@ import Contact from "./pages/Contact";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import UpdatePassword from "./pages/UpdatePassword";
-import './App.css'
+import "./pages/Responsive.css";
 
 function App() {
   
 
   return (
-    <div style={styles.app as React.CSSProperties}>
+    <div className="app">
     <Router>
     <Navbar/>
-    <div style={styles.content as React.CSSProperties}>
+    <div className="app-content">
      <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/testimonials" element={<Testimonials />}/>
@@ -34,19 +34,4 @@ function App() {
 
 export default App
 
-const styles = {
-  app: {
-    display: "flex",
-    flexDirection: "column",
-    minHeight: "100vh",
-  },
-  content: {
-    flex: 1,
-    marginTop: "80px",    
-    marginBottom: "80px", 
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-};
+

@@ -1,49 +1,45 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import { useLanguage } from "../context/LanguageContext";
+import "./Responsive.css"
+interface Project {
+  id: number;
+  title: string;
+  description_eng: string;
+  description_fr: string;
+  link?: string;
+  image_name: string;
+  image_url?: string;
+}
+
+interface Experience {
+  id: number;
+  title: string;
+  employer: string;
+  start_date: string;
+  end_date?: string;
+}
 
 const Home = () => {
   const { language } = useLanguage();
+
+ 
   const [bio, setBio] = useState({ bioENG: "", bioFR: "" });
   const [profileImage, setProfileImage] = useState("");
-  const [experience, setExperience] = useState<{
-    id: number;
-    title: string;
-    employer: string;
-    start_date: string;
-    end_date?: string;
-  }[]>([]);
-  type Project = {
-    id: number;
-    title: string;
-    description_eng: string;
-    description_fr: string;
-    link?: string;
-    image_name: string;
-    image_url?: string;
-  }
+
+ 
+  const [experience, setExperience] = useState<Experience[]>([]);
+
+
   const [projects, setProjects] = useState<Project[]>([]);
-  const [cvUrl, setCvUrl] = useState("");
-  const [animatedLines, setAnimatedLines] = useState<string[]>([]);
-
-
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
-  const projectsPerPage = 2;
+  const projectsPerPage = 2; 
 
   
-  const visibleProjects = projects.slice(currentProjectIndex, currentProjectIndex + projectsPerPage);
+  const [cvUrl, setCvUrl] = useState("");
 
-  
-  const handlePrev = () => {
-    setCurrentProjectIndex((prev) => Math.max(prev - projectsPerPage, 0));
-  };
-
-  const handleNext = () => {
-    setCurrentProjectIndex((prev) =>
-      prev + projectsPerPage < projects.length ? prev + projectsPerPage : prev
-    );
-  };
-
+ 
+  const [animatedLines, setAnimatedLines] = useState<string[]>([]);
   const terminalText = useMemo(
     () =>
       language === "EN"
@@ -59,6 +55,20 @@ const Home = () => {
           ],
     [language]
   );
+
+ 
+  const visibleProjects = projects.slice(currentProjectIndex, currentProjectIndex + projectsPerPage);
+
+  const handlePrev = () => {
+    setCurrentProjectIndex((prev) => Math.max(prev - projectsPerPage, 0));
+  };
+
+  const handleNext = () => {
+    setCurrentProjectIndex((prev) =>
+      prev + projectsPerPage < projects.length ? prev + projectsPerPage : prev
+    );
+  };
+
 
   useEffect(() => {
     let currentLine = 0;
@@ -83,8 +93,10 @@ const Home = () => {
     return () => clearInterval(timer);
   }, [terminalText]);
 
+ 
   useEffect(() => {
     const fetchData = async () => {
+   
       const { data: bioData } = await supabase
         .from("text")
         .select("name, content")
@@ -93,58 +105,82 @@ const Home = () => {
         bioENG: bioData?.find((item) => item.name === "bioENG")?.content || "",
         bioFR: bioData?.find((item) => item.name === "bioFR")?.content || "",
       });
+
+      
       const { data: image } = await supabase.storage.from("storage1").getPublicUrl("sam.jpg");
       setProfileImage(image?.publicUrl || "");
+
+   
       const { data: experienceData } = await supabase
         .from("experience")
         .select("*")
         .order("start_date", { ascending: true });
-      setExperience(experienceData ?? []);
+      setExperience(experienceData || []);
+
+      
       const { data: projectsData } = await supabase.from("projects").select("*");
       const projectsWithImages = (projectsData || []).map((project) => {
-        const { data: publicUrlData } = supabase.storage.from("storage1").getPublicUrl(project.image_name);
-        console.log("Generated Public URL:", project.image_name, publicUrlData?.publicUrl);
+        const { data: publicUrlData } = supabase.storage
+          .from("storage1")
+          .getPublicUrl(project.image_name);
         return {
           ...project,
-          image_url: publicUrlData?.publicUrl || null, 
+          image_url: publicUrlData?.publicUrl || null,
         };
       });
       setProjects(projectsWithImages);
-      console.log("Projects with Images:", projectsWithImages);
-      const { data: cvPublicUrl } = await supabase.storage.from("storage1").getPublicUrl("SamPrasadResume.pdf");
-      setCvUrl(cvPublicUrl?.publicUrl || "");
     };
+
     fetchData();
   }, []);
 
+  
+  useEffect(() => {
+    const fetchCV = async () => {
+      
+      const fileName = language === "EN" ? "SamPrasadResume.pdf" : "SamPrasadFrenchResume.pdf";
+      const { data: cvPublicUrl } = await supabase.storage.from("storage1").getPublicUrl(fileName);
+      setCvUrl(cvPublicUrl?.publicUrl || "");
+    };
+    fetchCV();
+  }, [language]);
+
   return (
-    <div style={styles.container}>
-      <section style={styles.terminal}>
+    <div className="home-container">
+      {/* Terminal Animation */}
+      <section className="home-terminal">
         {animatedLines.map((line, i) => (
           <p key={i}>{line}</p>
         ))}
       </section>
 
-      <section style={styles.aboutMe}>
-        <h1>{language === "EN" ? "About Me" : "À Propo De Moi"}</h1>
-        <img src={profileImage} alt="Sam" style={styles.profileImage} />
-        <div style={styles.text}>
+      {/* About Me */}
+      <section className="home-about">
+        <h1>{language === "EN" ? "About Me" : "À Propos De Moi"}</h1>
+        <img src={profileImage} alt="Sam" className="home-profile-image" />
+        <div className="home-text">
           <p>{language === "EN" ? bio.bioENG : bio.bioFR}</p>
         </div>
         {cvUrl && (
-          <a href={cvUrl} download="SamPrasadResume.pdf" style={styles.cvButton}>
+          <a
+            href={cvUrl}
+            download={language === "EN" ? "SamPrasadResume.pdf" : "SamPrasadFrenchResume.pdf"}
+            className="home-cv-button"
+          >
             {language === "EN" ? "Download My CV" : "Téléchargez Mon CV"}
           </a>
         )}
       </section>
 
-      <section style={styles.experience}>
+      {/* Experience */}
+      <section className="home-experience">
         <h1>{language === "EN" ? "Experience" : "Expérience"}</h1>
         {experience.length > 0 ? (
           <ul>
             {experience.map((item) => (
               <li key={item.id}>
-                <strong>{item.title}</strong> at {item.employer} ({item.start_date} - {item.end_date || "Present"})
+                <strong>{item.title}</strong> at {item.employer} (
+                {item.start_date} - {item.end_date || "Present"})
               </li>
             ))}
           </ul>
@@ -155,26 +191,29 @@ const Home = () => {
         )}
       </section>
 
-      <section style={styles.projects}>
+      {/* Projects */}
+      <section className="home-projects">
         <h1>{language === "EN" ? "Projects" : "Projets"}</h1>
         {projects.length > 0 ? (
-          <div style={styles.carouselContainer}>
-            <button 
+          <div className="home-projects-carousel">
+            <button
               onClick={handlePrev}
               disabled={currentProjectIndex === 0}
-              style={styles.carouselButton}
+              className="carousel-button"
             >
               &#8592;
             </button>
-            <div style={styles.cardContainer}>
+            <div className="project-card-container">
               {visibleProjects.map((project) => (
-                <div key={project.id} style={styles.card}>
-                  <img
-                    src={project.image_url || ""}
-                    alt={project.title}
-                    style={styles.cardImage}
-                  />
-                  <div style={styles.cardContent}>
+                <div key={project.id} className="project-card">
+                  {project.image_url && (
+                    <img
+                      src={project.image_url}
+                      alt={project.title}
+                      className="project-card-image"
+                    />
+                  )}
+                  <div className="project-card-content">
                     <h2>{project.title}</h2>
                     <p>
                       {language === "EN"
@@ -190,10 +229,10 @@ const Home = () => {
                 </div>
               ))}
             </div>
-            <button 
+            <button
               onClick={handleNext}
               disabled={currentProjectIndex + projectsPerPage >= projects.length}
-              style={styles.carouselButton}
+              className="carousel-button"
             >
               &#8594;
             </button>
@@ -206,104 +245,6 @@ const Home = () => {
       </section>
     </div>
   );
-};
-
-import { CSSProperties } from "react";
-
-const styles: { [key: string]: CSSProperties } = {
-  container: {
-    color: "#fff",
-    backgroundColor: "#000",
-    padding: "1rem",
-  },
-  terminal: {
-    fontFamily: "monospace",
-    marginBottom: "2rem",
-    fontSize: "1.3rem",
-    lineHeight: 1.6,
-    whiteSpace: "pre-wrap",
-    border: "2px solid #333",
-    padding: "1rem",
-    borderRadius: "4px",
-  },
-  aboutMe: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    marginBottom: "2rem",
-  },
-  text: {
-    width: "80%",
-    marginTop: "1rem",
-  },
-  profileImage: {
-    width: "150px",
-    borderRadius: "50%",
-  },
-  experience: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    marginBottom: "2rem",
-  },
-  projects: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    marginBottom: "2rem",
-  },
-  carouselContainer: {
-    display: "flex",
-    alignItems: "center",
-  },
-  carouselButton: {
-    backgroundColor: "#007bff",
-    border: "none",
-    color: "#fff",
-    fontSize: "2rem",
-    padding: "0.5rem 1rem",
-    cursor: "pointer",
-    borderRadius: "5px",
-    margin: "0 0.5rem",
-  },
-  cardContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: "1rem",
-  },
-  card: {
-    display: "flex",
-    backgroundColor: "#333",
-    padding: "1rem",
-    borderRadius: "5px",
-  },
-  cardImage: {
-    width: "150px",
-    height: "150px",
-    borderRadius: "5px",
-    marginRight: "1rem",
-    objectFit: "cover",
-  },
-  cardContent: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    textAlign: "left",
-  },
-  cvButton: {
-    marginTop: "1rem",
-    padding: "0.8rem 1.5rem",
-    backgroundColor: "#007bff",
-    color: "#fff",
-    textDecoration: "none",
-    borderRadius: "5px",
-    fontWeight: "bold",
-    display: "inline-block",
-    cursor: "pointer",
-  },
 };
 
 export default Home;

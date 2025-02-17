@@ -1,6 +1,6 @@
-/* eslint-disable prefer-const */
 import { useState, useEffect, ChangeEvent, FC } from "react";
 import { supabase } from "../lib/supabase";
+import "./Responsive.css";
 
 interface Project {
   id: number;
@@ -33,9 +33,8 @@ const ProjectsAdmin: FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editProjectFile, setEditProjectFile] = useState<File | null>(null);
 
-  // Carousel state
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
-  const projectsPerPage = 2;
+  const projectsPerPage = 1;
   const visibleProjects = projects.slice(
     currentProjectIndex,
     currentProjectIndex + projectsPerPage
@@ -125,6 +124,7 @@ const ProjectsAdmin: FC = () => {
   const editProject = async (id: number) => {
     if (!editingProject) return;
 
+    // eslint-disable-next-line prefer-const
     let updatedFields = { ...editingProject };
     let newImageUrl: string | null = null;
 
@@ -153,7 +153,9 @@ const ProjectsAdmin: FC = () => {
 
     setProjects((prev) =>
       prev.map((p) =>
-        p.id === id ? { ...updatedFields, image_url: newImageUrl || p.image_url } : p
+        p.id === id
+          ? { ...updatedFields, image_url: newImageUrl || p.image_url }
+          : p
       )
     );
     setEditingProject(null);
@@ -172,7 +174,6 @@ const ProjectsAdmin: FC = () => {
   const handlePrev = () => {
     setCurrentProjectIndex((prev) => Math.max(prev - projectsPerPage, 0));
   };
-
   const handleNext = () => {
     setCurrentProjectIndex((prev) =>
       prev + projectsPerPage < projects.length ? prev + projectsPerPage : prev
@@ -180,16 +181,14 @@ const ProjectsAdmin: FC = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div className="projects-admin-container">
       <h2>Manage Projects</h2>
-      <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
+      <form className="projects-admin-form" onSubmit={(e) => e.preventDefault()}>
         <input
           type="text"
           placeholder="Title"
           value={newProject.title}
-          onChange={(e) =>
-            setNewProject({ ...newProject, title: e.target.value })
-          }
+          onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
         />
         <input
           type="text"
@@ -211,36 +210,37 @@ const ProjectsAdmin: FC = () => {
           type="text"
           placeholder="Link"
           value={newProject.link}
-          onChange={(e) =>
-            setNewProject({ ...newProject, link: e.target.value })
-          }
+          onChange={(e) => setNewProject({ ...newProject, link: e.target.value })}
         />
         <input type="file" accept="image/*" onChange={handleFileChange} />
-        <button style={styles.button} onClick={addProject}>
+        <button className="projects-admin-button" onClick={addProject}>
           Add Project
         </button>
       </form>
 
-      <div style={styles.carouselContainer}>
-        <button 
-          style={styles.carouselButton}
+      <div className="projects-admin-carousel">
+        <button
+          className="carousel-arrow-button"
           onClick={handlePrev}
           disabled={currentProjectIndex === 0}
         >
           &#8592;
         </button>
-        <div style={styles.cardContainer}>
+        <div className="projects-card-container">
           {visibleProjects.map((project) => (
-            <div key={project.id} style={styles.card}>
+            <div key={project.id} className="projects-card">
               {project.image_url && (
                 <img
                   src={project.image_url}
                   alt={project.title}
-                  style={styles.cardImage}
+                  className="projects-card-image"
                 />
               )}
               {editingProject?.id === project.id ? (
-                <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
+                <form
+                  className="projects-admin-form"
+                  onSubmit={(e) => e.preventDefault()}
+                >
                   <input
                     type="text"
                     value={editingProject.title}
@@ -287,14 +287,14 @@ const ProjectsAdmin: FC = () => {
                     onChange={handleEditFileChange}
                   />
                   <button
-                    style={styles.button}
+                    className="projects-admin-button"
                     onClick={() => editProject(project.id)}
                   >
                     Save
                   </button>
                 </form>
               ) : (
-                <div style={styles.cardContent}>
+                <div className="projects-card-content">
                   <h3>{project.title}</h3>
                   <p>{project.description_eng}</p>
                   <p>{project.description_fr}</p>
@@ -306,16 +306,14 @@ const ProjectsAdmin: FC = () => {
                     </p>
                   )}
                   <button
-                    style={styles.button}
+                    className="projects-admin-button"
                     onClick={() => setEditingProject(project)}
                   >
                     Edit
                   </button>
                   <button
-                    style={styles.button}
-                    onClick={() =>
-                      deleteProject(project.id, project.image_name)
-                    }
+                    className="projects-admin-button"
+                    onClick={() => deleteProject(project.id, project.image_name)}
                   >
                     Delete
                   </button>
@@ -324,8 +322,8 @@ const ProjectsAdmin: FC = () => {
             </div>
           ))}
         </div>
-        <button 
-          style={styles.carouselButton}
+        <button
+          className="carousel-arrow-button"
           onClick={handleNext}
           disabled={currentProjectIndex + projectsPerPage >= projects.length}
         >
@@ -338,67 +336,4 @@ const ProjectsAdmin: FC = () => {
 
 export default ProjectsAdmin;
 
-const styles = {
-  container: {
-    padding: "1rem",
-    color: "#fff",
-    backgroundColor: "#000",
-    paddingBottom: "8rem",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "0.5rem",
-    maxWidth: "400px",
-    marginBottom: "1rem",
-  },
-  button: {
-    padding: "0.5rem 1rem",
-    backgroundColor: "#007bff",
-    color: "#fff",
-    border: "none",
-    cursor: "pointer",
-    borderRadius: "5px",
-    fontWeight: "bold",
-  },
-  carouselContainer: {
-    display: "flex",
-    alignItems: "center",
-    marginTop: "1rem",
-  },
-  carouselButton: {
-    backgroundColor: "#007bff",
-    border: "none",
-    color: "#fff",
-    fontSize: "2rem",
-    padding: "0.5rem 1rem",
-    cursor: "pointer",
-    borderRadius: "5px",
-    margin: "0 0.5rem",
-  },
-  cardContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-    gap: "1rem",
-  },
-  card: {
-    backgroundColor: "#333",
-    padding: "1rem",
-    borderRadius: "5px",
-    display: "flex",
-  },
-  cardImage: {
-    width: "200px",
-    height: "200px",
-    borderRadius: "5px",
-    marginRight: "1rem",
-    objectFit: "cover" as const,
-  },
-  cardContent: {
-    display: "flex",
-    flexDirection: "column" as const,
-    justifyContent: "center",
-    textAlign: "left" as const,
-  },
-};
 

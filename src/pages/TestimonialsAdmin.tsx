@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import "./Responsive.css";
 
 interface Testimonial {
   id: number;
@@ -26,9 +27,9 @@ const TestimonialsAdmin: React.FC = () => {
     await supabase.from("testimonials").update({ approved: true }).eq("id", id);
     const approvedTestimonial = pendingTestimonials.find((t) => t.id === id);
     if (approvedTestimonial) {
-      setApprovedTestimonials([...approvedTestimonials, approvedTestimonial]);
+      setApprovedTestimonials((prev) => [...prev, approvedTestimonial]);
     }
-    setPendingTestimonials(pendingTestimonials.filter((t) => t.id !== id));
+    setPendingTestimonials((prev) => prev.filter((t) => t.id !== id));
   };
 
   const deleteTestimonial = async (id: number, isApproved: boolean) => {
@@ -41,23 +42,35 @@ const TestimonialsAdmin: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="testimonials-admin-container">
       <h2>Pending Testimonials</h2>
       {pendingTestimonials.map((test) => (
-        <div style={styles.div} key={test.id}>
-          <p>Name: {test.name}</p>
-          <p>Content: {test.content}</p>
-          <button onClick={() => approveTestimonial(test.id)}>Approve</button>
-          <button onClick={() => deleteTestimonial(test.id, false)}>Delete</button>
+        <div className="testimonials-admin-card" key={test.id}>
+          <p>
+            <strong>Name:</strong> {test.name}
+          </p>
+          <p>
+            <strong>Content:</strong> {test.content}
+          </p>
+          <div className="testimonials-admin-actions">
+            <button onClick={() => approveTestimonial(test.id)}>Approve</button>
+            <button onClick={() => deleteTestimonial(test.id, false)}>Delete</button>
+          </div>
         </div>
       ))}
 
       <h2>Approved Testimonials</h2>
       {approvedTestimonials.map((test) => (
-        <div style={styles.div} key={test.id}>
-          <p>Name: {test.name}</p>
-          <p>Content: {test.content}</p>
-          <button onClick={() => deleteTestimonial(test.id, true)}>Delete</button>
+        <div className="testimonials-admin-card" key={test.id}>
+          <p>
+            <strong>Name:</strong> {test.name}
+          </p>
+          <p>
+            <strong>Content:</strong> {test.content}
+          </p>
+          <div className="testimonials-admin-actions">
+            <button onClick={() => deleteTestimonial(test.id, true)}>Delete</button>
+          </div>
         </div>
       ))}
     </div>
@@ -65,9 +78,3 @@ const TestimonialsAdmin: React.FC = () => {
 };
 
 export default TestimonialsAdmin;
-
-const styles = {
-  div: {
-    backgroundColor: "gray",
-  },
-};

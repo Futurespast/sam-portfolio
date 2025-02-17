@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import "./Responsive.css"; 
 
 interface Experience {
   id?: number;
@@ -27,7 +28,6 @@ const ExperienceAdmin = () => {
     fetchExperience();
   }, []);
 
- 
   const addExperience = async () => {
     const { data, error } = await supabase.from("experience").insert([newExperience]);
     if (!error && data) {
@@ -41,15 +41,15 @@ const ExperienceAdmin = () => {
     });
   };
 
-
   const editExperienceSave = async (id: number) => {
     if (editingExperience) {
       await supabase.from("experience").update(editingExperience).eq("id", id);
-      setExperience((prev) => prev.map((e) => (e.id === id ? editingExperience : e)));
+      setExperience((prev) =>
+        prev.map((e) => (e.id === id ? editingExperience : e))
+      );
     }
     setEditingExperience(null);
   };
-
 
   const deleteExperience = async (id: number) => {
     await supabase.from("experience").delete().eq("id", id);
@@ -57,9 +57,15 @@ const ExperienceAdmin = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div className="experience-admin-container">
       <h2>Manage Experience</h2>
-      <form style={styles.form} onSubmit={(e) => { e.preventDefault(); addExperience(); }}>
+      <form
+        className="experience-admin-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          addExperience();
+        }}
+      >
         <input
           type="text"
           placeholder="Role"
@@ -76,66 +82,95 @@ const ExperienceAdmin = () => {
           type="text"
           placeholder="Start Date"
           value={newExperience.start_date}
-          onChange={(e) => setNewExperience({ ...newExperience, start_date: e.target.value })}
+          onChange={(e) =>
+            setNewExperience({ ...newExperience, start_date: e.target.value })
+          }
         />
         <input
           type="text"
           placeholder="End Date"
           value={newExperience.end_date}
-          onChange={(e) => setNewExperience({ ...newExperience, end_date: e.target.value })}
+          onChange={(e) =>
+            setNewExperience({ ...newExperience, end_date: e.target.value })
+          }
         />
-        <button style={styles.button} onClick={addExperience}>Add Experience</button>
+        <button
+          type="submit"
+          className="experience-admin-button"
+        >
+          Add Experience
+        </button>
       </form>
 
-      <div style={styles.cardContainer}>
+      <div className="experience-admin-card-container">
         {experience.map((exp) => (
-          <div key={exp.id ?? Math.random()} style={styles.card}>
+          <div key={exp.id ?? Math.random()} className="experience-admin-card">
             {editingExperience?.id === exp.id ? (
-              <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
+              <form
+                className="experience-admin-form"
+                onSubmit={(e) => e.preventDefault()}
+              >
                 <input
                   type="text"
                   value={editingExperience?.role || ""}
                   onChange={(e) =>
-                    setEditingExperience(editingExperience ? { ...editingExperience, role: e.target.value } : null)
+                    setEditingExperience((prev) =>
+                      prev ? { ...prev, role: e.target.value } : null
+                    )
                   }
                 />
                 <input
                   type="text"
                   value={editingExperience?.employer || ""}
                   onChange={(e) =>
-                    setEditingExperience(editingExperience ? { ...editingExperience, employer: e.target.value } : null)
+                    setEditingExperience((prev) =>
+                      prev ? { ...prev, employer: e.target.value } : null
+                    )
                   }
                 />
                 <input
                   type="text"
                   value={editingExperience?.start_date || ""}
                   onChange={(e) =>
-                    setEditingExperience(editingExperience ? { ...editingExperience, start_date: e.target.value } : null)
+                    setEditingExperience((prev) =>
+                      prev ? { ...prev, start_date: e.target.value } : null
+                    )
                   }
                 />
                 <input
                   type="text"
                   value={editingExperience?.end_date || ""}
                   onChange={(e) =>
-                    setEditingExperience(editingExperience ? { ...editingExperience, end_date: e.target.value } : null)
+                    setEditingExperience((prev) =>
+                      prev ? { ...prev, end_date: e.target.value } : null
+                    )
                   }
                 />
-                <button style={styles.button} onClick={() => exp.id && editExperienceSave(exp.id)}>
+                <button
+                  className="experience-admin-button"
+                  onClick={() => exp.id && editExperienceSave(exp.id)}
+                >
                   Save
                 </button>
               </form>
             ) : (
-              <div style={styles.cardContent}>
+              <div className="experience-admin-card-content">
                 <h3>
                   {exp.role} at {exp.employer}
                 </h3>
                 <p>
                   {exp.start_date} - {exp.end_date}
                 </p>
-                <button style={styles.button} onClick={() => setEditingExperience(exp)}>
+                <button
+                  className="experience-admin-button"
+                  onClick={() => setEditingExperience(exp)}
+                >
                   Edit
                 </button>
-                <button style={styles.button} onClick={() => exp.id && deleteExperience(exp.id)}>
+                <button
+                  className="experience-admin-button"
+                  onClick={() => exp.id && deleteExperience(exp.id)}
+                >
                   Delete
                 </button>
               </div>
@@ -148,43 +183,3 @@ const ExperienceAdmin = () => {
 };
 
 export default ExperienceAdmin;
-
-const styles = {
-  container: {
-    padding: "1rem",
-    color: "#fff",
-    backgroundColor: "#000",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "0.5rem",
-    maxWidth: "400px",
-    marginBottom: "1rem",
-  },
-  cardContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-    gap: "1rem",
-  },
-  card: {
-    backgroundColor: "#333",
-    padding: "1rem",
-    borderRadius: "5px",
-    display: "flex",
-  },
-  cardContent: {
-    display: "flex",
-    flexDirection: "column" as const,
-    textAlign: "left" as const,
-  },
-  button: {
-    padding: "0.5rem 1rem",
-    backgroundColor: "#007bff",
-    color: "#fff",
-    border: "none",
-    cursor: "pointer",
-    borderRadius: "5px",
-    fontWeight: "bold",
-  },
-};

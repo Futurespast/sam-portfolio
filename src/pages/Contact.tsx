@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import "./Responsive.css"; // Import your global stylesheet
 
 const Contact = () => {
   const { language } = useLanguage();
@@ -34,32 +35,57 @@ const Contact = () => {
     }
   };
 
-  
-
   return (
-    <div style={styles.container}>
+    <div className="contact-container">
       <h1>{language === "EN" ? "Contact Me" : "Contactez Moi"}</h1>
-      <p>{language === "EN" ? "Send me a message using the form below." : "Envoyez-moi un message en utilisant le formulaire ci-dessous."}</p>
+      <p>
+        {language === "EN"
+          ? "Send me a message using the form below."
+          : "Envoyez-moi un message en utilisant le formulaire ci-dessous."}
+      </p>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input type="text" name="name" placeholder={language === "EN" ? "Your Name" : "Votre Nom"} value={formData.name} onChange={handleChange} required />
-        <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
-        <input type="text" name="subject" placeholder={language === "EN" ? "Subject" : "Sujet"} value={formData.subject} onChange={handleChange} required />
-        <textarea name="message" placeholder={language === "EN" ? "Your Message" : "Votre Message"} value={formData.message} onChange={handleChange} required></textarea>
-        <button type="submit" style={styles.button}>{language === "EN" ? "Send Message" : "Envoyer le Message"}</button>
+      <form onSubmit={handleSubmit} className="contact-form">
+        <input
+          type="text"
+          name="name"
+          placeholder={language === "EN" ? "Your Name" : "Votre Nom"}
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="text"
+          name="subject"
+          placeholder={language === "EN" ? "Subject" : "Sujet"}
+          value={formData.subject}
+          onChange={handleChange}
+          required
+        />
+        <textarea
+          name="message"
+          placeholder={language === "EN" ? "Your Message" : "Votre Message"}
+          value={formData.message}
+          onChange={handleChange}
+          required
+        ></textarea>
+        <button type="submit" className="contact-button">
+          {language === "EN" ? "Send Message" : "Envoyer le Message"}
+        </button>
       </form>
 
-      {statusMessage && <p style={styles.statusMessage}>{statusMessage}</p>}
+      {statusMessage && <p className="contact-status-message">{statusMessage}</p>}
     </div>
   );
 };
 
-const styles = {
-  container: { color: "#fff", backgroundColor: "#000", padding: "2rem", textAlign: "center" as const, maxWidth: "600px", margin: "0 auto" },
-  form: { display: "flex", flexDirection: "column" as const, gap: "1rem", marginTop: "1rem" },
-  button: { backgroundColor: "#007bff", color: "#fff", padding: "0.8rem", border: "none", cursor: "pointer", borderRadius: "5px" },
-  statusMessage: { marginTop: "1rem", fontWeight: "bold" as const },
-};
-
 export default Contact;
+
 
