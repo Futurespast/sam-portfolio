@@ -29,7 +29,7 @@ const ExperienceAdmin = () => {
   }, []);
 
   const addExperience = async () => {
-    const { data, error } = await supabase.from("experience").insert([newExperience]);
+    const { data, error } = await supabase.from("experience").insert([newExperience]).select();
     if (!error && data) {
       setExperience((prev) => [...prev, data[0]]);
     }

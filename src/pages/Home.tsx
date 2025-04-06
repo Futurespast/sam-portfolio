@@ -14,7 +14,7 @@ interface Project {
 
 interface Experience {
   id: number;
-  title: string;
+  role: string;
   employer: string;
   start_date: string;
   end_date?: string;
@@ -179,7 +179,7 @@ const Home = () => {
           <ul>
             {experience.map((item) => (
               <li key={item.id}>
-                <strong>{item.title}</strong> at {item.employer} (
+                <strong>{item.role}</strong> at {item.employer} (
                 {item.start_date} - {item.end_date || "Present"})
               </li>
             ))}

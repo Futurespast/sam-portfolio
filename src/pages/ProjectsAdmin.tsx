@@ -32,13 +32,14 @@ const ProjectsAdmin: FC = () => {
   const [newProjectFile, setNewProjectFile] = useState<File | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editProjectFile, setEditProjectFile] = useState<File | null>(null);
-
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
   const projectsPerPage = 1;
   const visibleProjects = projects.slice(
     currentProjectIndex,
     currentProjectIndex + projectsPerPage
   );
+
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -170,6 +171,14 @@ const ProjectsAdmin: FC = () => {
     await supabase.from("projects").delete().eq("id", id);
     setProjects((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete) return;
+    await deleteProject(projectToDelete.id, projectToDelete.image_name);
+    setProjectToDelete(null);
+  };
+
+  const cancelDelete = () => setProjectToDelete(null);
 
   const handlePrev = () => {
     setCurrentProjectIndex((prev) => Math.max(prev - projectsPerPage, 0));
@@ -313,7 +322,7 @@ const ProjectsAdmin: FC = () => {
                   </button>
                   <button
                     className="projects-admin-button"
-                    onClick={() => deleteProject(project.id, project.image_name)}
+                    onClick={() => setProjectToDelete(project)}
                   >
                     Delete
                   </button>
@@ -330,6 +339,25 @@ const ProjectsAdmin: FC = () => {
           &#8594;
         </button>
       </div>
+
+      {projectToDelete && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Confirm Delete</h3>
+            <p>
+              Are you sure you want to delete "{projectToDelete.title}"?
+            </p>
+            <div className="modal-buttons">
+              <button className="modal-confirm" onClick={confirmDeleteProject}>
+                Confirm
+              </button>
+              <button className="modal-cancel" onClick={cancelDelete}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -12,34 +12,36 @@ interface Testimonial {
 const TestimonialsAdmin: React.FC = () => {
   const [approvedTestimonials, setApprovedTestimonials] = useState<Testimonial[]>([]);
   const [pendingTestimonials, setPendingTestimonials] = useState<Testimonial[]>([]);
+  const [testimonialToDelete, setTestimonialToDelete] = useState<Testimonial | null>(null);
+
+  const fetchTestimonials = async () => {
+    const { data } = await supabase.from("testimonials").select("*");
+    const testimonials: Testimonial[] = data ?? [];
+    setApprovedTestimonials(testimonials.filter((t) => t.approved));
+    setPendingTestimonials(testimonials.filter((t) => !t.approved));
+  };
 
   useEffect(() => {
-    const fetchTestimonials = async () => {
-      const { data } = await supabase.from("testimonials").select("*");
-      const testimonials: Testimonial[] = data ?? [];
-      setApprovedTestimonials(testimonials.filter((t) => t.approved));
-      setPendingTestimonials(testimonials.filter((t) => !t.approved));
-    };
     fetchTestimonials();
   }, []);
 
   const approveTestimonial = async (id: number) => {
     await supabase.from("testimonials").update({ approved: true }).eq("id", id);
-    const approvedTestimonial = pendingTestimonials.find((t) => t.id === id);
-    if (approvedTestimonial) {
-      setApprovedTestimonials((prev) => [...prev, approvedTestimonial]);
-    }
-    setPendingTestimonials((prev) => prev.filter((t) => t.id !== id));
+    fetchTestimonials();
   };
 
-  const deleteTestimonial = async (id: number, isApproved: boolean) => {
+  const deleteTestimonial = async (id: number) => {
     await supabase.from("testimonials").delete().eq("id", id);
-    if (isApproved) {
-      setApprovedTestimonials((prev) => prev.filter((test) => test.id !== id));
-    } else {
-      setPendingTestimonials((prev) => prev.filter((test) => test.id !== id));
-    }
+    fetchTestimonials();
   };
+
+  const confirmDeleteTestimonial = async () => {
+    if (!testimonialToDelete) return;
+    await deleteTestimonial(testimonialToDelete.id);
+    setTestimonialToDelete(null);
+  };
+
+  const cancelDelete = () => setTestimonialToDelete(null);
 
   return (
     <div className="testimonials-admin-container">
@@ -54,7 +56,7 @@ const TestimonialsAdmin: React.FC = () => {
           </p>
           <div className="testimonials-admin-actions">
             <button onClick={() => approveTestimonial(test.id)}>Approve</button>
-            <button onClick={() => deleteTestimonial(test.id, false)}>Delete</button>
+            <button onClick={() => setTestimonialToDelete(test)}>Delete</button>
           </div>
         </div>
       ))}
@@ -69,10 +71,27 @@ const TestimonialsAdmin: React.FC = () => {
             <strong>Content:</strong> {test.content}
           </p>
           <div className="testimonials-admin-actions">
-            <button onClick={() => deleteTestimonial(test.id, true)}>Delete</button>
+            <button onClick={() => setTestimonialToDelete(test)}>Delete</button>
           </div>
         </div>
       ))}
+
+      {testimonialToDelete && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to delete this testimonial?</p>
+            <div className="modal-buttons">
+              <button className="modal-confirm" onClick={confirmDeleteTestimonial}>
+                Confirm
+              </button>
+              <button className="modal-cancel" onClick={cancelDelete}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

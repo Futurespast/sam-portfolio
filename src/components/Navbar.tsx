@@ -45,7 +45,7 @@ const Navbar = () => {
       <ul className="nav-list">
         <li>
           <Link to="/">
-            {language === "EN" ? "Main Page" : "Page d'Accueil"}
+            {language === "EN" ? "Home" : "Page d'Accueil"}
           </Link>
         </li>
         <li>
